@@ -1,10 +1,10 @@
-import os
 import torch.optim
 import torch.nn as nn
 from pytorch_lightning import LightningModule
 
+
 class MLP(LightningModule):
-    def __init__(self, hidden_dim, input_dim=3, output_dim=1):
+    def __init__(self, hidden_dim, input_dim=4, output_dim=1):
         super().__init__()
 
         self.mlp = nn.Sequential(
@@ -19,14 +19,21 @@ class MLP(LightningModule):
     def forward(self, x):
         return self.mlp(x)
 
-    def step(self, batch, batch_idx):
+    def predict_step(self, batch, batch_idx):
         x, y = batch
         pred = self(x)
-        loss = self.loss_func(pred, y)
+        return y, pred
+
+    def step(self, batch, batch_idx):
+        y, pred = self.predict_step(batch, batch_idx)
+        loss = self.loss_func(y, pred)
         return loss
 
     def training_step(self, batch, batch_idx):
-      return self.step(batch, batch_idx)
+        return self.step(batch, batch_idx)
+
+    def validation_step(self, batch, batch_idx):
+        return self.step(batch, batch_idx)
 
     def configure_optimizers(self):
-      return torch.optim.Adam(self.parameters(), lr=1e-3)
+        return torch.optim.Adam(self.parameters(), lr=1e-3)

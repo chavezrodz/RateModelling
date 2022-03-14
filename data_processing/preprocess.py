@@ -54,24 +54,3 @@ def preprocess():
         writer.writeheader()
         for row in rows:
           writer.writerow(row)
-
-df = pd.read_csv(file_name)
-df = df.drop(["T"],axis=1)
-
-
-# x = df['P']
-# y = df['K']
-# z = df['gamma']
-
-# c = ax.pcolormesh(x, y, z, cmap='RdBu', vmin=z.min(), vmax=z.max())
-# ax.set_title('pcolormesh')
-# ax.axis([x.min(), x.max(), y.min(), y.max()])
-# fig.colorbar(c, ax=ax)
-
-sns.heatmap(df.pivot("P", "K", "gamma"))
-plt.show()
-
-# plt.scatter(df.)
-# g = sns.pairplot(df, hue='gamma', diag_kind="kde", corner=True)
-# g.map_lower(sns.kdeplot, levels=4, color=".2")
-# plt.show()
