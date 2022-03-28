@@ -18,6 +18,12 @@ class MLP(LightningModule):
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
             nn.Linear(hidden_dim, output_dim)
         )
 
@@ -40,6 +46,9 @@ class MLP(LightningModule):
         return self.step(batch, batch_idx)
 
     def validation_step(self, batch, batch_idx):
+        return self.step(batch, batch_idx)
+
+    def test_step(self, batch, batch_idx):
         return self.step(batch, batch_idx)
 
     def configure_optimizers(self):

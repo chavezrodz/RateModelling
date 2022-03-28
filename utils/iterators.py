@@ -4,11 +4,14 @@ import pandas as pd
 import torch.utils.data as data
 
 
-def data_iterators(datafile='combined_rates.csv', datapath='datasets',
+def data_iterators(datafile='batch_0.csv', datapath='datasets',
                    batch_size=64, num_workers=8,
-                   test_samp=0.1, val_samp=0.2):
-    X = pd.read_csv(os.path.join(datapath, datafile))
-    Q = torch.tensor(X.values).type(torch.float)
+                   test_samp=0.1, val_samp=0.2,
+                   include_method=False
+                   ):
+    X = pd.read_csv(os.path.join(datapath, datafile)).values
+    X = X[:, 1:] if not include_method else X
+    Q = torch.tensor(X).type(torch.float)
 
     n_samples = Q.shape[0]
     train_samp = 1 - test_samp - val_samp
