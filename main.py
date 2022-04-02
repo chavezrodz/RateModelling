@@ -2,7 +2,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning import utilities
 from utils.iterators import data_iterators
 import pandas as pd
-from MLP import MLP
+from models.GRU import GRU
 import torch.nn as nn
 import torch
 
@@ -19,7 +19,7 @@ utilities.seed.seed_everything(seed=SEED)
 # Need to add test set as single batch
 train, val, test = data_iterators(batch_size=BATCH_SIZE)
 
-model = MLP(hidden_dim=HIDDEN_DIM)
+model = GRU(hidden_dim=HIDDEN_DIM)
 
 trainer = Trainer(
     gpus=AVAIL_GPUS,
