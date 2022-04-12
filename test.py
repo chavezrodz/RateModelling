@@ -10,39 +10,16 @@ import pandas as pd
 # import torch
 
 import matplotlib.pyplot as plt
-
 # matplotlib.use('TkAgg')
 
-AVAIL_GPUS = 0
-EPOCHS = 2
-BATCH_SIZE = 64
-HIDDEN_DIM = 16
-SEED = 0
-DATASET = 'method_0.csv'
-# utilities.seed.seed_everything(seed=SEED)
 
-
-def visualize_test(P, K, T, model, N=50, df_truth=None):
-    # file = 'datasets/combined_rates.csv'
-    # df = pd.read_csv(file)
-
-    # df = df['T' == 0.3]
-    # print(df.shape)
-    # post_results = model(test[0])
-    # print(((post_results - init_results)**2).mean().item())
-
-    t = torch.linspace(0, 12, N)
-
+def generate_test_data(P, K, T, N=50):
+    t = torch.linspace(0, 20, N)
     P = torch.ones(N)*P
     K = torch.ones(N)*K
     T = torch.ones(N)*T
 
-    stack = torch.stack([P, K, T, t]).T
-    model.eval()
-    out = model(stack)
-
-    plt.plot(t.detach().numpy(), out.detach().numpy())
-    plt.show()
+    return torch.stack([P, K, T, t]).T
 
 
 def closest_value(df, col, val):
@@ -61,14 +38,20 @@ def get_closest_values(df, P, K, T):
     return subset
 
 
-df = pd.read_csv('datasets/method_0.csv')
+HIDDEN_DIM = 16
+DATASET = 'method_0.csv'
 
 P = 16
 T = 0.3
 K = 3
 
+df = pd.read_csv('datasets/method_0.csv')
 df = get_closest_values(df, P, K, T)
-plt.plot(df['t'], df['gamma'])
+print(df)
+model_input = df[['M', 'P', 'K', 'T', 't']]
+data_gam = df['gamma']
+t = df['t']
+plt.plot(t, data_gam)
 plt.show()
 
 # print(idx)
