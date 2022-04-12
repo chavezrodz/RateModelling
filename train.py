@@ -2,7 +2,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning import utilities
 from utils.iterators import data_iterators
 import pandas as pd
-from models.GRU import GRU
+from MLP import MLP
 import torch.nn as nn
 import torch
 
@@ -10,16 +10,18 @@ import torch
 
 AVAIL_GPUS = 0
 EPOCHS = 2
-BATCH_SIZE = 16
+BATCH_SIZE = 64
 HIDDEN_DIM = 16
 SEED = 0
+DATASET = 'method_0.csv'
+
 
 utilities.seed.seed_everything(seed=SEED)
 
-# Need to add test set as single batch
-train, val, test = data_iterators(batch_size=BATCH_SIZE)
+train, val, test = data_iterators(batch_size=BATCH_SIZE,
+                                  datafile=DATASET)
 
-model = GRU(hidden_dim=HIDDEN_DIM)
+model = MLP(hidden_dim=HIDDEN_DIM)
 
 trainer = Trainer(
     gpus=AVAIL_GPUS,
@@ -28,5 +30,3 @@ trainer = Trainer(
 
 trainer.fit(model, train, val)
 
-# pred = trainer.predict(model, test)
-# pred = torch.vstack(list(chain(*pred)))

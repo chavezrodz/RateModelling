@@ -4,7 +4,7 @@ import pandas as pd
 import torch.utils.data as data
 
 
-def data_iterators(datafile='batch_0.csv', datapath='datasets',
+def data_iterators(datafile, datapath='datasets',
                    batch_size=64, num_workers=8,
                    test_samp=0.1, val_samp=0.2,
                    include_method=False
