@@ -1,61 +1,78 @@
-from re import M
 from pytorch_lightning import Trainer
 from pytorch_lightning import utilities
 from pytorch_lightning.callbacks import ModelCheckpoint
-from utils.iterators import data_iterators
-from pytorch_lightning.loggers import WandbLogger
-import pandas as pd
+from iterators import data_iterators
+from pytorch_lightning.loggers import TensorBoardLogger
 from MLP import MLP
-import torch.nn as nn
-import torch
-
 
 AVAIL_GPUS = 0
-EPOCHS = 10
-BATCH_SIZE = 64
-HIDDEN_DIM = 32
-SEED = 0
-METHOD = 0
-DATASET = 'method_'+str(METHOD)+'.csv'
 
-mode = 'train'
+hpars = dict(
+    BATCH_SIZE=4096,
+    HIDDEN_DIM=128,
+    METHOD=0,
+)
 
-utilities.seed.seed_everything(seed=SEED)
+tpars = dict(
+    SEED=0,
+    criterion='l1_loss',
+    lr=1e-2,
+    EPOCHS=10,
+    shuffle_dataset=True,
+)
+
+
+datafile = 'method_'+str(hpars['METHOD'])+'.csv'
+utilities.seed.seed_everything(seed=tpars['SEED'])
 
 train, val, test = data_iterators(
-    batch_size=BATCH_SIZE,
-    datafile=DATASET
+    batch_size=hpars['BATCH_SIZE'],
+    datafile=datafile,
+    shuffle_dataset=tpars['shuffle_dataset']
     )
 
 
 checkpoint_callback = ModelCheckpoint(
-    # dirpath="my/path/",
-    save_top_k=1,
-    monitor="val_loss",
+    dirpath="saved_models",
+    save_top_k=5,
+    monitor="valid/"+tpars['criterion'],
     mode="min",
-    filename=f"Method_{METHOD}_"+"{epoch:02d}-{val_loss:.3f}",
+    filename=f"M_{hpars['METHOD']}_"+"{epoch:02d}",
     save_last=False
     )
 
-if mode == 'train':
-    model = MLP(hidden_dim=HIDDEN_DIM)
-    wandb_logger = WandbLogger(
-        project="schrodinger_rates",
-        offline=True
-        )
+model = MLP(
+    hidden_dim=hpars['HIDDEN_DIM'],
+    criterion=tpars['criterion'],
+    lr=tpars['lr'],
+    )
 
-    trainer = Trainer(
-        logger=wandb_logger,
-        gpus=AVAIL_GPUS,
-        max_epochs=EPOCHS,
-        callbacks=[checkpoint_callback],
-        log_every_n_steps=50
-        )
+logger = TensorBoardLogger(
+    save_dir='TB_logs',
+    default_hp_metric=True
+)
 
-    trainer.fit(model, train, val)
-    # checkpoint_callback.best_model_path
-    # print(checkpoint_callback.best_model_path)
 
+trainer = Trainer(
+    logger=logger,
+    gpus=AVAIL_GPUS,
+    max_epochs=tpars['EPOCHS'],
+    callbacks=[checkpoint_callback],
+    log_every_n_steps=10
+    )
+
+trainer.fit(
+    model,
+    train,
+    val
+    )
+
+allpars = hpars | tpars
+logger.log_hyperparams(
+    allpars
+    )
+
+# if mode == 'train':
 # else:
 #     model = MLP.load_from_checkpoint(
 #         checkpoint_path='lightning_logs/version_9/checkpoints/last.ckpt',

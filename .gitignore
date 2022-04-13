@@ -4,8 +4,9 @@ lightning_logs
 .vscode
 .venv
 wandb
+TB_logs
+saved_models
 
-None
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
