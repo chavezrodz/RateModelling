@@ -4,7 +4,7 @@ from pytorch_lightning import LightningModule
 
 
 def pc_err(pred, y):
-    return ((pred-y).abs()/y).mean()
+    return ((pred-y).abs()/y.abs()).mean()
 
 
 class MLP(LightningModule):

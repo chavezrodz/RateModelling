@@ -38,4 +38,4 @@ def data_iterators(datafile, datapath='datasets',
                                    shuffle=False, num_workers=num_workers)
     test_loader = data.DataLoader(test, batch_size=batch_size,
                                   shuffle=False, num_workers=num_workers)
-    return train_loader, train_loader, test_loader
+    return train_loader, valid_loader, test_loader

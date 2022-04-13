@@ -8,16 +8,16 @@ from MLP import MLP
 AVAIL_GPUS = 0
 
 hpars = dict(
-    BATCH_SIZE=4096,
+    BATCH_SIZE=2048,
     HIDDEN_DIM=128,
     METHOD=0,
 )
 
 tpars = dict(
     SEED=0,
-    criterion='l1_loss',
-    lr=1e-2,
-    EPOCHS=10,
+    criterion='pc_err',
+    lr=1e-3,
+    EPOCHS=300,
     shuffle_dataset=True,
 )
 
@@ -32,12 +32,14 @@ train, val, test = data_iterators(
     )
 
 
+filename = f"M_{hpars['METHOD']}_"+"{epoch:02d}"+f"_crit_{tpars['criterion']}"
+
 checkpoint_callback = ModelCheckpoint(
     dirpath="saved_models",
-    save_top_k=5,
+    save_top_k=1,
     monitor="valid/"+tpars['criterion'],
     mode="min",
-    filename=f"M_{hpars['METHOD']}_"+"{epoch:02d}",
+    filename=filename,
     save_last=False
     )
 
@@ -52,6 +54,10 @@ logger = TensorBoardLogger(
     default_hp_metric=True
 )
 
+allpars = hpars | tpars
+logger.log_hyperparams(
+    allpars
+    )
 
 trainer = Trainer(
     logger=logger,
@@ -66,15 +72,3 @@ trainer.fit(
     train,
     val
     )
-
-allpars = hpars | tpars
-logger.log_hyperparams(
-    allpars
-    )
-
-# if mode == 'train':
-# else:
-#     model = MLP.load_from_checkpoint(
-#         checkpoint_path='lightning_logs/version_9/checkpoints/last.ckpt',
-#         hidden_dim=HIDDEN_DIM
-#         )
