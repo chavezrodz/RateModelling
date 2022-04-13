@@ -3,7 +3,9 @@ datasets/
 lightning_logs
 .vscode
 .venv
+wandb
 
+None
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

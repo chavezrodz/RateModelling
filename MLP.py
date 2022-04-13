@@ -3,6 +3,15 @@ import torch.nn as nn
 from pytorch_lightning import LightningModule
 
 
+class RMSLELoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.mse = nn.MSELoss()
+
+    def forward(self, pred, actual):
+        return torch.sqrt(self.mse(torch.log(pred + 1), torch.log(actual + 1)))
+
+
 class MLP(LightningModule):
     def __init__(self, hidden_dim, input_dim=4, output_dim=1):
         super().__init__()
@@ -27,7 +36,7 @@ class MLP(LightningModule):
             nn.Linear(hidden_dim, output_dim)
         )
 
-        self.loss_func = nn.MSELoss()
+        self.loss_func = nn.L1Loss()
 
     def forward(self, x):
         return self.mlp(x)
@@ -43,10 +52,13 @@ class MLP(LightningModule):
         return loss
 
     def training_step(self, batch, batch_idx):
-        return self.step(batch, batch_idx)
+        loss = self.step(batch, batch_idx)
+        self.log("train_loss", loss, prog_bar=True)
+        return loss
 
     def validation_step(self, batch, batch_idx):
-        return self.step(batch, batch_idx)
+        loss = self.step(batch, batch_idx)
+        self.log("val_loss", loss, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         return self.step(batch, batch_idx)
