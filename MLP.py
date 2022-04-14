@@ -1,7 +1,8 @@
 import torch.optim
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from utils import normalize_vector, pc_err
+from utils import normalize_vector
+from pytorch_forecasting.metrics import MAPE
 
 
 class MLP(LightningModule):
@@ -17,7 +18,7 @@ class MLP(LightningModule):
     ):
         super().__init__()
 
-        self.pc_err = pc_err
+        self.pc_err = MAPE()
         self.abs_err = nn.L1Loss()
         self.mse = nn.MSELoss()
 

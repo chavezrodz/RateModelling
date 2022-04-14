@@ -6,3 +6,4 @@ matplotlib
 tensorboard
 wandb
 tensorboard
+pytorch_forecasting
