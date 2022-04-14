@@ -11,36 +11,29 @@ class MLP(LightningModule):
     def __init__(
         self,
         hidden_dim,
+        n_layers,
         input_dim=4,
         output_dim=1,
         lr=1e-3,
-        criterion='l1_loss',
+        criterion='abs_err',
     ):
         super().__init__()
 
         self.pc_err = pc_err
-        self.l1_loss = nn.L1Loss()
+        self.abs_err = nn.L1Loss()
         self.mse = nn.MSELoss()
+
+        self.mlp = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU()
+            )
+        for i in range(n_layers):
+            self.mlp.append(nn.Linear(hidden_dim, hidden_dim))
+            self.mlp.append(nn.ReLU())
+        self.mlp.append(nn.Linear(hidden_dim, output_dim))
 
         self.criterion = criterion
         self.lr = lr
-        self.mlp = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, output_dim)
-        )
 
     def forward(self, x):
         return self.mlp(x)
@@ -51,7 +44,7 @@ class MLP(LightningModule):
 
     def get_metrics(self, pred, y):
         metrics = dict(
-            l1_loss=self.l1_loss(pred, y),
+            abs_err=self.abs_err(pred, y),
             pc_err=self.pc_err(pred, y),
             mse=self.mse(pred, y),
         )
@@ -62,7 +55,6 @@ class MLP(LightningModule):
         metrics = self.get_metrics(pred, y)
         self.log_dict(
             {f'train/{k}': v for k, v in metrics.items()},
-            on_epoch=True
             )
         return metrics[self.criterion]
 

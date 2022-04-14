@@ -9,18 +9,18 @@ AVAIL_GPUS = 0
 
 hpars = dict(
     BATCH_SIZE=2048,
-    HIDDEN_DIM=128,
+    HIDDEN_DIM=64,
+    N_layers=8,
     METHOD=0,
 )
 
 tpars = dict(
     SEED=0,
-    criterion='pc_err',
+    criterion='abs_err',
     lr=1e-3,
     EPOCHS=300,
     shuffle_dataset=True,
 )
-
 
 datafile = 'method_'+str(hpars['METHOD'])+'.csv'
 utilities.seed.seed_everything(seed=tpars['SEED'])
@@ -32,7 +32,7 @@ train, val, test = data_iterators(
     )
 
 
-filename = f"M_{hpars['METHOD']}_"+"{epoch:02d}"+f"_crit_{tpars['criterion']}"
+filename = f"M={hpars['METHOD']}_"+"{epoch:02d}"+f"_crit={tpars['criterion']}"
 
 checkpoint_callback = ModelCheckpoint(
     dirpath="saved_models",
@@ -45,6 +45,8 @@ checkpoint_callback = ModelCheckpoint(
 
 model = MLP(
     hidden_dim=hpars['HIDDEN_DIM'],
+    n_layers=hpars['N_layers'],
+
     criterion=tpars['criterion'],
     lr=tpars['lr'],
     )
