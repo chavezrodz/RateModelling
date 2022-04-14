@@ -1,76 +1,80 @@
 from pytorch_lightning import Trainer
 from pytorch_lightning import utilities
 from pytorch_lightning.callbacks import ModelCheckpoint
-from iterators import data_iterators
 from pytorch_lightning.loggers import TensorBoardLogger
+from argparse import ArgumentParser
+from iterators import data_iterators
 from MLP import MLP
 
-AVAIL_GPUS = 0
 
-hpars = dict(
-    BATCH_SIZE=2048,
-    HIDDEN_DIM=64,
-    N_layers=8,
-    METHOD=0,
-)
+def main(args, avail_gpus):
+    datafile = 'method_'+str(args.method)+'.csv'
+    utilities.seed.seed_everything(seed=args.seed)
 
-tpars = dict(
-    SEED=0,
-    criterion='abs_err',
-    lr=1e-3,
-    EPOCHS=300,
-    shuffle_dataset=True,
-)
+    train, val, test = data_iterators(
+        batch_size=args.batch_size,
+        datafile=datafile,
+        shuffle_dataset=args.shuffle_dataset
+        )
 
-datafile = 'method_'+str(hpars['METHOD'])+'.csv'
-utilities.seed.seed_everything(seed=tpars['SEED'])
+    checkpoint_callback = ModelCheckpoint(
+        dirpath="Results/saved_models",
+        save_top_k=1,
+        monitor="valid/"+args.criterion,
+        mode="min",
+        filename='epoch={epoch}_val_pc_err={valid/pc_err:.2e}',
+        auto_insert_metric_name=False,
+        save_last=False
+        )
 
-train, val, test = data_iterators(
-    batch_size=hpars['BATCH_SIZE'],
-    datafile=datafile,
-    shuffle_dataset=tpars['shuffle_dataset']
+    model = MLP(
+        hidden_dim=args.hidden_dim,
+        n_layers=args.n_layers,
+
+        criterion=args.criterion,
+        lr=args.lr,
+        amsgrad=args.amsgrad
+        )
+
+    logger = TensorBoardLogger(
+        save_dir='Results/TB_logs',
+        default_hp_metric=True
     )
 
+    logger.log_hyperparams(
+        args
+        )
 
-filename = f"M={hpars['METHOD']}_"+"{epoch:02d}"+f"_crit={tpars['criterion']}"
+    trainer = Trainer(
+        logger=logger,
+        gpus=avail_gpus,
+        max_epochs=args.epochs,
+        callbacks=[checkpoint_callback],
+        log_every_n_steps=10
+        )
 
-checkpoint_callback = ModelCheckpoint(
-    dirpath="saved_models",
-    save_top_k=1,
-    monitor="valid/"+tpars['criterion'],
-    mode="min",
-    filename=filename,
-    save_last=False
-    )
+    trainer.fit(
+        model,
+        train,
+        val
+        )
 
-model = MLP(
-    hidden_dim=hpars['HIDDEN_DIM'],
-    n_layers=hpars['N_layers'],
 
-    criterion=tpars['criterion'],
-    lr=tpars['lr'],
-    )
+if __name__ == '__main__':
+    AVAIL_GPUS = 0
 
-logger = TensorBoardLogger(
-    save_dir='TB_logs',
-    default_hp_metric=True
-)
+    parser = ArgumentParser()
+    parser.add_argument("--batch_size", default=2048, type=int)
+    parser.add_argument("--hidden_dim", default=64, type=int)
+    parser.add_argument("--n_layers", default=6, type=int)
+    parser.add_argument("--method", default=0, type=int)
 
-allpars = hpars | tpars
-logger.log_hyperparams(
-    allpars
-    )
+    parser.add_argument("--shuffle_dataset", default=True, type=bool)
+    parser.add_argument("--seed", default=0, type=int)
+    parser.add_argument("--epochs", default=300, type=int)
+    parser.add_argument("--criterion", default='pc_err', type=str)
+    parser.add_argument("--lr", default=1e-3, type=float)
+    parser.add_argument("--amsgrad", default=True, type=bool)
+    args = parser.parse_args()
 
-trainer = Trainer(
-    logger=logger,
-    gpus=AVAIL_GPUS,
-    max_epochs=tpars['EPOCHS'],
-    callbacks=[checkpoint_callback],
-    log_every_n_steps=10
-    )
-
-trainer.fit(
-    model,
-    train,
-    val
-    )
+    main(args, AVAIL_GPUS)

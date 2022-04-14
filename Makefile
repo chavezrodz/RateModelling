@@ -1,4 +1,3 @@
 clean:
-	rm -r TB_logs
-	rm -r saved_models
+	rm -r Results
 	rm -r __pycache__

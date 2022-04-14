@@ -1,10 +1,7 @@
 import torch.optim
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-
-
-def pc_err(pred, y):
-    return ((pred-y).abs()/y.abs()).mean()
+from utils import normalize_vector, pc_err
 
 
 class MLP(LightningModule):
@@ -15,6 +12,7 @@ class MLP(LightningModule):
         input_dim=4,
         output_dim=1,
         lr=1e-3,
+        amsgrad=True,
         criterion='abs_err',
     ):
         super().__init__()
@@ -22,6 +20,14 @@ class MLP(LightningModule):
         self.pc_err = pc_err
         self.abs_err = nn.L1Loss()
         self.mse = nn.MSELoss()
+
+        self.criterion = criterion
+        self.lr = lr
+        self.amsgrad = amsgrad
+
+        self.p_m, self.p_n = 1.8494850881985143, 1.1505149978319906
+        self.t_m, self.t_n = 0.013138785488880289, 1.288377063031596
+        self.T_m, self.T_n = 0.525, 0.475
 
         self.mlp = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -32,11 +38,14 @@ class MLP(LightningModule):
             self.mlp.append(nn.ReLU())
         self.mlp.append(nn.Linear(hidden_dim, output_dim))
 
-        self.criterion = criterion
-        self.lr = lr
-
     def forward(self, x):
-        return self.mlp(x)
+        x = normalize_vector(
+            x,
+            self.p_m, self.p_n,
+            self.T_m, self.T_n,
+            self.t_m, self.t_n
+            )
+        return self.mlp(x).square()
 
     def predict_step(self, batch, batch_idx):
         x, y = batch
@@ -70,4 +79,8 @@ class MLP(LightningModule):
         return self.step(batch, batch_idx)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.lr)
+        return torch.optim.Adam(
+            self.parameters(),
+            lr=self.lr,
+            amsgrad=self.amsgrad
+            )
