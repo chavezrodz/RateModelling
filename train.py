@@ -5,6 +5,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from argparse import ArgumentParser
 from iterators import data_iterators
 from MLP import MLP
+import os
 
 
 def main(args, avail_gpus):
@@ -16,13 +17,16 @@ def main(args, avail_gpus):
         datafile=datafile,
         shuffle_dataset=args.shuffle_dataset
         )
+    file_prefix = 'M_' + str(args.method)
+    file_prefix += 'n_layers_' + str(args.n_layers)
+    file_prefix += '_hid_dim_' + str(args.hidden_dim)
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath="Results/saved_models",
+        dirpath=os.path.join(args.results_dir, "saved_models"),
         save_top_k=1,
         monitor="valid/"+args.criterion,
         mode="min",
-        filename='epoch={epoch}_val_pc_err={valid/pc_err:.2e}',
+        filename=file_prefix + '_val_pc_err={valid/pc_err:.2e}',
         auto_insert_metric_name=False,
         save_last=False
         )
@@ -37,7 +41,7 @@ def main(args, avail_gpus):
         )
 
     logger = TensorBoardLogger(
-        save_dir='Results/TB_logs',
+        save_dir=os.path.join(args.results_dir, "TB_logs"),
         default_hp_metric=True
     )
 
@@ -64,17 +68,20 @@ if __name__ == '__main__':
     AVAIL_GPUS = 0
 
     parser = ArgumentParser()
-    parser.add_argument("--batch_size", default=2048, type=int)
     parser.add_argument("--hidden_dim", default=64, type=int)
     parser.add_argument("--n_layers", default=6, type=int)
     parser.add_argument("--method", default=0, type=int)
 
-    parser.add_argument("--shuffle_dataset", default=True, type=bool)
-    parser.add_argument("--seed", default=0, type=int)
+    parser.add_argument("--batch_size", default=2048, type=int)
     parser.add_argument("--epochs", default=300, type=int)
     parser.add_argument("--criterion", default='pc_err', type=str)
-    parser.add_argument("--lr", default=1e-3, type=float)
+    parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--amsgrad", default=True, type=bool)
+
+    parser.add_argument("--results_dir", default='Results', type=str)
+    parser.add_argument("--shuffle_dataset", default=True, type=bool)
+    parser.add_argument("--seed", default=0, type=int)
+
     args = parser.parse_args()
 
     main(args, AVAIL_GPUS)

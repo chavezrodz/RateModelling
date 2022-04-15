@@ -14,7 +14,7 @@ class MLP(LightningModule):
         output_dim=1,
         lr=1e-3,
         amsgrad=True,
-        criterion='abs_err',
+        criterion='abs_err'
     ):
         super().__init__()
 
@@ -80,8 +80,15 @@ class MLP(LightningModule):
         return self.step(batch, batch_idx)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(
+        optimizer = torch.optim.Adam(
             self.parameters(),
             lr=self.lr,
             amsgrad=self.amsgrad
             )
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #     optimizer,
+        #     'min',
+        #     patience=5
+        #     )
+        # return [optimizer], [scheduler]
+        return optimizer

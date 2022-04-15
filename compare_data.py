@@ -29,7 +29,8 @@ def get_closest_values(df, P, K, T):
     subset = subset[df['K'] == k_closest]
     return subset
 
-def compare_with_data(P, K, T, dataset, model_path, hidden_dim, n_layers):
+
+def compare_with_data(P, K, T, dataset, model, hidden_dim, n_layers):
     df = pd.read_csv(os.path.join('datasets', dataset))
     df = get_closest_values(df, P, K, T)
 
@@ -38,12 +39,6 @@ def compare_with_data(P, K, T, dataset, model_path, hidden_dim, n_layers):
     X = df[['P', 'K', 'T', 't']].values
 
     X = torch.tensor(X).type(torch.float)
-
-    model = MLP.load_from_checkpoint(
-        checkpoint_path=model_path,
-        hidden_dim=hidden_dim,
-        n_layers=n_layers
-        )
 
     pred = model(X).detach().squeeze()
     print(f"""
