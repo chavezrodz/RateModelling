@@ -4,6 +4,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from argparse import ArgumentParser
 from iterators import data_iterators
+from utils import make_file_prefix, make_checkpt_dir
 from MLP import MLP
 import os
 
@@ -12,21 +13,18 @@ def main(args, avail_gpus):
     datafile = 'method_'+str(args.method)+'.csv'
     utilities.seed.seed_everything(seed=args.seed)
 
-    train, val, test = data_iterators(
+    (train, val, test), consts_dict = data_iterators(
         batch_size=args.batch_size,
         datafile=datafile,
         shuffle_dataset=args.shuffle_dataset
         )
-    file_prefix = 'M_' + str(args.method)
-    file_prefix += 'n_layers_' + str(args.n_layers)
-    file_prefix += '_hid_dim_' + str(args.hidden_dim)
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=os.path.join(args.results_dir, "saved_models"),
+        dirpath=make_checkpt_dir(args),
         save_top_k=1,
-        monitor="valid/"+args.criterion,
+        monitor=args.criterion+'/validation',
         mode="min",
-        filename=file_prefix + '_val_pc_err={valid/pc_err:.2e}',
+        filename=make_file_prefix(args)+'{pc_err/validation:.2e}',
         auto_insert_metric_name=False,
         save_last=False
         )
@@ -34,7 +32,7 @@ def main(args, avail_gpus):
     model = MLP(
         hidden_dim=args.hidden_dim,
         n_layers=args.n_layers,
-
+        consts_dict=consts_dict,
         criterion=args.criterion,
         lr=args.lr,
         amsgrad=args.amsgrad
@@ -42,6 +40,7 @@ def main(args, avail_gpus):
 
     logger = TensorBoardLogger(
         save_dir=os.path.join(args.results_dir, "TB_logs"),
+        name='Method_'+str(args.method),
         default_hp_metric=True
     )
 
@@ -53,8 +52,7 @@ def main(args, avail_gpus):
         logger=logger,
         gpus=avail_gpus,
         max_epochs=args.epochs,
-        callbacks=[checkpoint_callback],
-        log_every_n_steps=10
+        callbacks=[checkpoint_callback]
         )
 
     trainer.fit(
@@ -74,9 +72,10 @@ if __name__ == '__main__':
 
     parser.add_argument("--batch_size", default=2048, type=int)
     parser.add_argument("--epochs", default=300, type=int)
-    parser.add_argument("--criterion", default='pc_err', type=str)
-    parser.add_argument("--lr", default=1e-4, type=float)
+    parser.add_argument("--lr", default=1e-3, type=float)
     parser.add_argument("--amsgrad", default=True, type=bool)
+    parser.add_argument("--criterion", default='pc_err', type=str,
+                        choices=['pc_err', 'abs_err', 'mse'])
 
     parser.add_argument("--results_dir", default='Results', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)

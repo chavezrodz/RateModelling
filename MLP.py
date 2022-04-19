@@ -4,12 +4,13 @@ from pytorch_lightning import LightningModule
 from utils import normalize_vector
 from pytorch_forecasting.metrics import MAPE
 
-
 class MLP(LightningModule):
+
     def __init__(
         self,
         hidden_dim,
         n_layers,
+        consts_dict,
         input_dim=4,
         output_dim=1,
         lr=1e-3,
@@ -18,6 +19,7 @@ class MLP(LightningModule):
     ):
         super().__init__()
 
+        self.consts_dict = consts_dict
         self.pc_err = MAPE()
         self.abs_err = nn.L1Loss()
         self.mse = nn.MSELoss()
@@ -25,10 +27,6 @@ class MLP(LightningModule):
         self.criterion = criterion
         self.lr = lr
         self.amsgrad = amsgrad
-
-        self.p_m, self.p_n = 1.8494850881985143, 1.1505149978319906
-        self.t_m, self.t_n = 0.013138785488880289, 1.288377063031596
-        self.T_m, self.T_n = 0.525, 0.475
 
         self.mlp = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -40,12 +38,7 @@ class MLP(LightningModule):
         self.mlp.append(nn.Linear(hidden_dim, output_dim))
 
     def forward(self, x):
-        x = normalize_vector(
-            x,
-            self.p_m, self.p_n,
-            self.T_m, self.T_n,
-            self.t_m, self.t_n
-            )
+        x = normalize_vector(x, self.consts_dict)
         return self.mlp(x).square()
 
     def predict_step(self, batch, batch_idx):
@@ -64,7 +57,8 @@ class MLP(LightningModule):
         pred, y = self.predict_step(batch, batch_idx)
         metrics = self.get_metrics(pred, y)
         self.log_dict(
-            {f'train/{k}': v for k, v in metrics.items()},
+            {f'{k}/train': v for k, v in metrics.items()},
+            on_epoch=True, on_step=False
             )
         return metrics[self.criterion]
 
@@ -72,12 +66,9 @@ class MLP(LightningModule):
         pred, y = self.predict_step(batch, batch_idx)
         metrics = self.get_metrics(pred, y)
         self.log_dict(
-            {f'valid/{k}': v for k, v in metrics.items()},
+            {f'{k}/validation': v for k, v in metrics.items()},
             on_epoch=True
-            )
-
-    def test_step(self, batch, batch_idx):
-        return self.step(batch, batch_idx)
+        )
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
