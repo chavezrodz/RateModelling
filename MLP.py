@@ -4,8 +4,8 @@ from pytorch_lightning import LightningModule
 from utils import normalize_vector
 from pytorch_forecasting.metrics import MAPE
 
-class MLP(LightningModule):
 
+class MLP(LightningModule):
     def __init__(
         self,
         hidden_dim,
@@ -67,6 +67,14 @@ class MLP(LightningModule):
         metrics = self.get_metrics(pred, y)
         self.log_dict(
             {f'{k}/validation': v for k, v in metrics.items()},
+            on_epoch=True
+        )
+
+    def test_step(self, batch, batch_idx):
+        pred, y = self.predict_step(batch, batch_idx)
+        metrics = self.get_metrics(pred, y)
+        self.log_dict(
+            {f'{k}': v for k, v in metrics.items()},
             on_epoch=True
         )
 

@@ -12,6 +12,7 @@ def data_iterators(datafile, datapath='datasets',
                    include_method=False,
                    shuffle_dataset=True
                    ):
+
     X = pd.read_csv(os.path.join(datapath, datafile)).values
 
     # Removing negative decay rates

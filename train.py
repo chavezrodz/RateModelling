@@ -9,14 +9,22 @@ from MLP import MLP
 import os
 
 
-def main(args, avail_gpus):
-    datafile = 'method_'+str(args.method)+'.csv'
-    utilities.seed.seed_everything(seed=args.seed)
+def main(args):
+    if args.gpu:
+        avail_gpus = 1
+        n_workers = 0
+    else:
+        avail_gpus = 0
+        n_workers = 8
 
-    (train, val, test), consts_dict = data_iterators(
+    datafile = 'method_'+str(args.method)+'.csv'
+    utilities.seed.seed_everything(seed=args.seed, workers=True)
+
+    (train_dl, val_dl, test_dl), consts_dict = data_iterators(
         batch_size=args.batch_size,
         datafile=datafile,
-        shuffle_dataset=args.shuffle_dataset
+        shuffle_dataset=args.shuffle_dataset,
+        num_workers=n_workers
         )
 
     checkpoint_callback = ModelCheckpoint(
@@ -52,35 +60,40 @@ def main(args, avail_gpus):
         logger=logger,
         gpus=avail_gpus,
         max_epochs=args.epochs,
-        callbacks=[checkpoint_callback]
+        callbacks=[checkpoint_callback],
+        auto_lr_find=args.auto_lr_find,
+        fast_dev_run=args.fast_dev_run,
+        deterministic=True,
         )
 
     trainer.fit(
         model,
-        train,
-        val
+        train_dl,
+        val_dl
         )
+
+    trainer.test(model, test_dl)
 
 
 if __name__ == '__main__':
-    AVAIL_GPUS = 0
-
     parser = ArgumentParser()
     parser.add_argument("--hidden_dim", default=64, type=int)
     parser.add_argument("--n_layers", default=6, type=int)
     parser.add_argument("--method", default=0, type=int)
 
-    parser.add_argument("--batch_size", default=2048, type=int)
-    parser.add_argument("--epochs", default=300, type=int)
+    parser.add_argument("--batch_size", default=4096, type=int)
+    parser.add_argument("--epochs", default=20, type=int)
     parser.add_argument("--lr", default=1e-3, type=float)
     parser.add_argument("--amsgrad", default=True, type=bool)
+    parser.add_argument("--auto_lr_find", default=False, type=bool)
     parser.add_argument("--criterion", default='pc_err', type=str,
                         choices=['pc_err', 'abs_err', 'mse'])
 
     parser.add_argument("--results_dir", default='Results', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
     parser.add_argument("--seed", default=0, type=int)
-
+    parser.add_argument("--gpu", default=False, type=bool)
+    parser.add_argument("--fast_dev_run", default=False, type=bool)
     args = parser.parse_args()
 
-    main(args, AVAIL_GPUS)
+    main(args)
