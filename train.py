@@ -78,11 +78,11 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--hidden_dim", default=64, type=int)
-    parser.add_argument("--n_layers", default=6, type=int)
+    parser.add_argument("--n_layers", default=8, type=int)
     parser.add_argument("--method", default=0, type=int)
 
     parser.add_argument("--batch_size", default=4096, type=int)
-    parser.add_argument("--epochs", default=20, type=int)
+    parser.add_argument("--epochs", default=100, type=int)
     parser.add_argument("--lr", default=1e-3, type=float)
     parser.add_argument("--amsgrad", default=True, type=bool)
     parser.add_argument("--auto_lr_find", default=False, type=bool)

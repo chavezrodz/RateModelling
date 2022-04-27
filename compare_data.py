@@ -26,25 +26,25 @@ def get_closest_values(df, P, K, T):
     T_closest = closest_value(df, 'T', T)
     subset = df[(df['P'] == p_closest) & (df['T'] == T_closest)]
     k_closest = closest_value(subset, 'K', K)
-    subset = subset[df['K'] == k_closest]
+    subset = subset.loc[df['K'] == k_closest]
     return subset
 
 
 def compare_with_data(P, K, T, dataset, model, hidden_dim, n_layers):
     df = pd.read_csv(os.path.join('datasets', dataset))
+    df = df[df['gamma'] > 0]
     df = get_closest_values(df, P, K, T)
 
     data_gam = df['gamma']
-    t = df['t']
+    t = df['t'].values
     X = df[['P', 'K', 'T', 't']].values
-
     X = torch.tensor(X).type(torch.float)
 
     pred = model(X).detach().squeeze()
     print(f"""
     Using M = {df['M'].iloc[0]}
-        P = {df['P'].iloc[0]} 
-        K = {df['K'].iloc[0]} 
+        P = {df['P'].iloc[0]}
+        K = {df['K'].iloc[0]}
         T = {df['T'].iloc[0]}
     Error: {((pred-data_gam)/data_gam).abs().mean()*100:.2f}%
     """)
