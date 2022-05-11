@@ -3,9 +3,9 @@ from pytorch_lightning import utilities
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from argparse import ArgumentParser
-from iterators import data_iterators
-from utils import make_file_prefix, make_checkpt_dir
-from MLP import MLP
+from misc.iterators import data_iterators
+from misc.utils import make_file_prefix, make_checkpt_dir
+from misc.MLP import MLP
 import os
 
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=False, type=bool)
-    parser.add_argument("--fast_dev_run", default=False, type=bool)
+    parser.add_argument("--fast_dev_run", default=True, type=bool)
     args = parser.parse_args()
 
     main(args)

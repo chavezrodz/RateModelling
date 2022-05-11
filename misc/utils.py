@@ -4,6 +4,42 @@ import torch
 import os
 
 
+def load_df(datapath, datafile, which):
+    if which == 'both':
+        df1 = pd.read_csv(os.path.join(datapath, 'logspaced', datafile))
+        df2 = pd.read_csv(os.path.join(datapath, 'linspaced', datafile))
+        df = pd.concat([df1, df2], ignore_index=True)
+    else:
+        df = pd.read_csv(os.path.join(datapath, which, datafile))
+
+    df = df.drop_duplicates()
+
+    ts = df['t'].unique()
+    t_10 = ts[np.argmin(np.abs(ts - 10))]
+    t_max = np.max(ts)
+
+    # print(len(df))
+    df_10 = df[df['t'] == t_10].sort_values(by=['P', 'K', 'T'], ascending=True)
+    df_max = df[df['t'] == t_max].sort_values(by=['P', 'K', 'T'], ascending=True)
+
+    # print(np.array_equal(df_10.values[:, :-2], df_max.values[:, :-2]))
+    g10 = df_10['gamma'].values
+    gmax = df_max['gamma'].values
+
+    err = np.abs((g10 - gmax) / g10) * 100
+
+    df_10['pc_err'] = err
+    df_10 = df_10.drop(['gamma', 't'], axis=1)
+    # print(df_10)
+    idx = np.where(err > 1000)[0]
+    df_th = df_10.iloc[idx].sort_values(by='pc_err', ascending=True)
+    # print(len(err), len(idx))
+
+    # print(df_th)
+    # df = df[df['t'] < 10]
+    return df
+
+
 def generate_test_data(P, K, T, N=101):
     t = torch.linspace(0.05, 20, N)
     P = torch.ones(N)*P

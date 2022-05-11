@@ -1,7 +1,7 @@
 import torch.optim
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from utils import normalize_vector
+from misc.utils import normalize_vector
 from pytorch_forecasting.metrics import MAPE
 
 

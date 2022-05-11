@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 import torch.utils.data as data
 import numpy as np
-from utils import get_consts_dict, load_df
+from misc.utils import get_consts_dict, load_df
 
 
 def data_iterators(datafile, datapath='datasets',
