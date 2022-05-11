@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 from MLP import MLP
 import os
+from utils import load_df
 
 
 def generate_test_data(P, K, T, N=50):
@@ -31,8 +32,7 @@ def get_closest_values(df, P, K, T):
 
 
 def compare_with_data(P, K, T, dataset, model, hidden_dim, n_layers):
-    df = pd.read_csv(os.path.join('datasets', dataset))
-    df = df[df['gamma'] > 0]
+    df = load_df('datasets', dataset, 'both')
     df = get_closest_values(df, P, K, T)
 
     data_gam = df['gamma']
@@ -41,6 +41,7 @@ def compare_with_data(P, K, T, dataset, model, hidden_dim, n_layers):
     X = torch.tensor(X).type(torch.float)
 
     pred = model(X).detach().squeeze()
+
     print(f"""
     Using M = {df['M'].iloc[0]}
         P = {df['P'].iloc[0]}

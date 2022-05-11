@@ -1,5 +1,15 @@
+import pandas as pd
 import numpy as np
+import torch
 import os
+
+
+def generate_test_data(P, K, T, N=101):
+    t = torch.linspace(0.05, 20, N)
+    P = torch.ones(N)*P
+    K = torch.ones(N)*K
+    T = torch.ones(N)*T
+    return torch.stack([P, K, T, t]).T
 
 
 def get_mean_norm(x, log=True):

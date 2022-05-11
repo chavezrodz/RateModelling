@@ -17,10 +17,12 @@ def main(args):
         avail_gpus = 0
         n_workers = 8
 
-    datafile = 'method_'+str(args.method)+'.csv'
     utilities.seed.seed_everything(seed=args.seed, workers=True)
 
+    datafile = 'method_'+str(args.method)+'.csv'
+
     (train_dl, val_dl, test_dl), consts_dict = data_iterators(
+        which_spacing=args.which_spacing,
         batch_size=args.batch_size,
         datafile=datafile,
         shuffle_dataset=args.shuffle_dataset,
@@ -77,8 +79,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("--hidden_dim", default=64, type=int)
-    parser.add_argument("--n_layers", default=8, type=int)
+    parser.add_argument("--hidden_dim", default=32, type=int)
+    parser.add_argument("--n_layers", default=4, type=int)
     parser.add_argument("--method", default=0, type=int)
 
     parser.add_argument("--batch_size", default=4096, type=int)
@@ -90,6 +92,7 @@ if __name__ == '__main__':
                         choices=['pc_err', 'abs_err', 'mse'])
 
     parser.add_argument("--results_dir", default='Results', type=str)
+    parser.add_argument("--which_spacing", default='both', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=False, type=bool)

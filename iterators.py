@@ -3,20 +3,19 @@ import torch
 import pandas as pd
 import torch.utils.data as data
 import numpy as np
-from utils import get_consts_dict
+from utils import get_consts_dict, load_df
 
 
 def data_iterators(datafile, datapath='datasets',
+                   which_spacing='both',
                    batch_size=64, num_workers=8,
                    test_samp=0.1, val_samp=0.2,
                    include_method=False,
                    shuffle_dataset=True
                    ):
 
-    X = pd.read_csv(os.path.join(datapath, datafile)).values
-
-    # Removing negative decay rates
-    X = X[np.where(X[:, -1] > 0)]
+    df = load_df(datapath, datafile, which_spacing)
+    X = df.values
     # removing method idx
     X = X[:, 1:] if not include_method else X
 
