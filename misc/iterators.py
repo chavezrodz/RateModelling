@@ -25,9 +25,9 @@ def data_iterators(datafile, datapath='datasets',
     train_cutoff = int(train_samp*n_samples)
     val_cutoff = int((train_samp + val_samp)*n_samples)
 
-    consts_dict = get_consts_dict(X[:train_cutoff])
-
     Q = torch.tensor(X).type(torch.float)
+    consts_dict = get_consts_dict(Q[:train_cutoff])
+
     if shuffle_dataset:
         order = np.arange(n_samples)
         shuffled_order = np.random.shuffle(order)

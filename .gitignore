@@ -6,7 +6,7 @@ lightning_logs
 wandb
 TB_logs
 saved_models
-
+model.pt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

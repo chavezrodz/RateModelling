@@ -79,8 +79,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("--hidden_dim", default=32, type=int)
-    parser.add_argument("--n_layers", default=4, type=int)
+    parser.add_argument("--hidden_dim", default=64, type=int)
+    parser.add_argument("--n_layers", default=8, type=int)
     parser.add_argument("--method", default=0, type=int)
 
     parser.add_argument("--batch_size", default=4096, type=int)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=False, type=bool)
-    parser.add_argument("--fast_dev_run", default=True, type=bool)
+    parser.add_argument("--fast_dev_run", default=False, type=bool)
     args = parser.parse_args()
 
     main(args)
