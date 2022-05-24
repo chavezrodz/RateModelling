@@ -6,7 +6,7 @@ import numpy as np
 from misc.utils import get_consts_dict, load_df
 
 
-def data_iterators(datafile, datapath='datasets',
+def data_iterators(datafile, datapath,
                    which_spacing='both',
                    batch_size=64, num_workers=8,
                    test_samp=0.1, val_samp=0.2,

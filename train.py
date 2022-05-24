@@ -22,9 +22,10 @@ def main(args):
     datafile = 'method_'+str(args.method)+'.csv'
 
     (train_dl, val_dl, test_dl), consts_dict = data_iterators(
+        datafile=datafile,
+        datapath=args.data_dir,
         which_spacing=args.which_spacing,
         batch_size=args.batch_size,
-        datafile=datafile,
         shuffle_dataset=args.shuffle_dataset,
         num_workers=n_workers
         )
@@ -91,12 +92,13 @@ if __name__ == '__main__':
     parser.add_argument("--criterion", default='pc_err', type=str,
                         choices=['pc_err', 'abs_err', 'mse'])
 
-    parser.add_argument("--results_dir", default='Results', type=str)
+    parser.add_argument("--results_dir", default='../Results', type=str)
+    parser.add_argument("--data_dir", default='../datasets', type=str)
     parser.add_argument("--which_spacing", default='both', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=False, type=bool)
-    parser.add_argument("--fast_dev_run", default=False, type=bool)
+    parser.add_argument("--fast_dev_run", default=True, type=bool)
     args = parser.parse_args()
 
     main(args)
