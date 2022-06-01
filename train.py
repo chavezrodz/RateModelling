@@ -27,7 +27,8 @@ def main(args):
         which_spacing=args.which_spacing,
         batch_size=args.batch_size,
         shuffle_dataset=args.shuffle_dataset,
-        num_workers=n_workers
+        num_workers=n_workers,
+        val_samp=args.val_sample
         )
 
     checkpoint_callback = ModelCheckpoint(
@@ -50,7 +51,11 @@ def main(args):
         )
 
     logger = TensorBoardLogger(
-        save_dir=os.path.join(args.results_dir, "TB_logs"),
+        save_dir=os.path.join(
+            args.results_dir,
+            args.proj_dir,
+            "TB_logs"
+            ),
         name='Method_'+str(args.method),
         default_hp_metric=True
     )
@@ -93,13 +98,14 @@ if __name__ == '__main__':
                         choices=['pc_err', 'abs_err', 'mse'])
 
     parser.add_argument("--results_dir", default='../Results', type=str)
+    parser.add_argument("--proj_dir", default='Rate_modelling', type=str)
     parser.add_argument("--data_dir", default='../datasets', type=str)
     parser.add_argument("--which_spacing", default='both', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
+    parser.add_argument("--val_sample", default=0.5, type=float)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=False, type=bool)
-    parser.add_argument("--fast_dev_run", default=True, type=bool)
+    parser.add_argument("--fast_dev_run", default=False, type=bool)
     args = parser.parse_args()
 
     main(args)
-

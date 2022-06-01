@@ -84,6 +84,7 @@ def make_file_prefix(args):
 def make_checkpt_dir(args):
     dir = os.path.join(
         args.results_dir,
+        args.proj_dir,
         "saved_models",
         'Method_'+str(args.method)
         )
