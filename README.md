@@ -1,4 +1,10 @@
 ## How to run
 
-pip install -r requirements
-python main.py
+
+### Requires
+
+python version 3.9.0
+requirements.txt
+
+datasets-/linspaced/method_*.csv
+        -/logspaced/method_*.csv
