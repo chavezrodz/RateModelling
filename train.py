@@ -98,7 +98,6 @@ if __name__ == '__main__':
                         choices=['pc_err', 'abs_err', 'mse'])
 
     parser.add_argument("--results_dir", default='../Results', type=str)
-    parser.add_argument("--proj_dir", default='Rate_modelling', type=str)
     parser.add_argument("--data_dir", default='../datasets', type=str)
     parser.add_argument("--which_spacing", default='both', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
@@ -106,6 +105,8 @@ if __name__ == '__main__':
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=False, type=bool)
     parser.add_argument("--fast_dev_run", default=False, type=bool)
+    parser.add_argument("--proj_dir", default='rate_modelling', type=str,
+                        choices=['rate_integrating'])
     args = parser.parse_args()
 
     main(args)

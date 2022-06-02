@@ -107,8 +107,12 @@ def load_df(datapath, datafile, which, verbose=False):
     t_max = np.max(ts)
 
     # print(len(df))
-    df_10 = df[df['t'] == t_10].sort_values(by=['P', 'K', 'T'], ascending=True)
-    df_max = df[df['t'] == t_max].sort_values(by=['P', 'K', 'T'], ascending=True)
+    df_10 = df[df['t'] == t_10].sort_values(
+        by=['P', 'K', 'T'], ascending=True
+        )
+    df_max = df[df['t'] == t_max].sort_values(
+        by=['P', 'K', 'T'], ascending=True
+        )
 
     assert np.array_equal(df_10.values[:, :-2], df_max.values[:, :-2])
 
@@ -127,8 +131,8 @@ def load_df(datapath, datafile, which, verbose=False):
     indices = []
     for line in df_th.values:
         P, K, T = line[1], line[2], line[3]
-        idx = df.loc[((df['P'] == P) & (df['K'] == K) & (df['T'] == T)), :].index
-        indices.extend(idx.values)
+        idx = df.loc[((df['P'] == P) & (df['K'] == K) & (df['T'] == T)), :]
+        indices.extend(idx.index.values)
         if verbose:
             print(f'P:{P}, K:{K}, T:{T}')
             subset = df.loc[idx.values].sort_values(by='t', ascending=True)
@@ -139,6 +143,8 @@ def load_df(datapath, datafile, which, verbose=False):
     df = df.loc[indices_good]
     if verbose:
         print(f'Number of corrupt lines: {len(idx)}/{len(err)}')
-        print(f'Total points used {len(df)}/{init_len} ({len(df)/init_len*100}%)')
+        print(
+            f'Total points used {len(df)}/{init_len} ({len(df)/init_len*100}%)'
+            )
         plt.show()
     return df
