@@ -125,8 +125,8 @@ if __name__ == '__main__':
     parser.add_argument("--pc_err", default='2.93e-02', type=str)
 
     # Integral Params
-    parser.add_argument("--a", default=0.05, type=float)
-    parser.add_argument("--b", default=0.95, type=float)
+    parser.add_argument("--a", default=0.01, type=float)
+    parser.add_argument("--b", default=0.99, type=float)
     parser.add_argument("--N", default=50, type=int)
 
     # Managing params

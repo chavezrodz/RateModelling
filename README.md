@@ -14,6 +14,12 @@ datasets-/linspaced/method_*.csv
 
 ### 2 train first MLP with rate data
 
+python train.py --proj_dir rate_modelling --method method_idx
+
 ### 3 use first MLP to compute analytical integrals with the model
 
+python integrate_all.py
+
 ### 4 train second MLP using analytical rates
+
+python train.py --proj_dir rate_integratin --method method_idx
