@@ -5,22 +5,6 @@ import torch
 import os
 
 
-def log_to_lin(x, x_mean, norm):
-    x = (torch.log10(x) - x_mean)/norm
-    return x
-
-
-def lin_to_log(x, x_mean, norm):
-    x = x*norm + x_mean
-    return 10**x
-
-
-def get_mean_norm(x, log=True):
-    if log:
-        x = np.log10(x)
-    return x.mean(), (x.max() - x.min())/2
-
-
 def closest_value(df, col, val):
     uniques = df[col].unique()
     close_idx = np.argmin(np.abs(uniques - val))
@@ -43,34 +27,6 @@ def generate_test_data(P, K, T, N=50):
     out[:, 0] = T
     out[:, 4] = np.linspace(0, 20, N)
     return out
-
-
-def get_consts_dict(x):
-    t_mn = get_mean_norm(torch.unique(x[:, -2]))
-    T_mn = get_mean_norm(torch.unique(x[:, -3]), log=False)
-    p_mn = get_mean_norm(torch.unique(x[:, -5]))
-
-    consts = torch.zeros(3, 2)
-    consts[0, 0], consts[0, 1] = p_mn
-    consts[1, 0], consts[1, 1] = T_mn
-    consts[2, 0], consts[2, 1] = t_mn
-    return consts
-
-
-def normalize_vector(x, consts):
-    """
-    Proceed in reverse order: t, T, K, P
-    """
-
-    x[:, -1] = log_to_lin(x[:, -1], consts[-1, 0], consts[-1, 1])
-    x[:, -2] = (x[:, -2] - consts[-2, 0])/consts[-2, 1]
-    x[:, -3] = x[:, -3]/x[:, -4]
-    x[:, -4] = log_to_lin(x[:, -4], consts[-3, 0], consts[-3, 1])
-    return x
-
-
-def pc_err(pred, y):
-    return ((pred-y)/y).abs().mean()
 
 
 def make_file_prefix(args):

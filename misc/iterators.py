@@ -3,18 +3,28 @@ import torch
 import pandas as pd
 import torch.utils.data as data
 import numpy as np
-from misc.utils import get_consts_dict, load_df
+from misc.utils import load_df
+from misc.norms import get_consts_dict_modelling, get_consts_dict_integrating
 
 
-def data_iterators(datafile, datapath,
-                   which_spacing='both',
-                   batch_size=64, num_workers=8,
-                   test_samp=0.1, val_samp=0.2,
-                   include_method=False,
-                   shuffle_dataset=True
-                   ):
+def get_iterators(
+    method, dataset, datapath, results_path,
+    which_spacing='both',
+    batch_size=64, num_workers=8, test_samp=0.1, val_samp=0.2,
+    include_method=False, shuffle_dataset=True
+                  ):
 
-    df = load_df(datapath, datafile, which_spacing)
+    datafile = 'method_'+str(method)+'.csv'
+    if dataset == 'rate_modelling':
+        df = load_df(datapath, datafile, which_spacing)
+    elif dataset == 'rate_integrating':
+        df = pd.read_csv(
+            os.path.join(results_path, 'integral_results', datafile)
+            )
+        df.drop_duplicates()
+    else:
+        raise Exception('Dataset not found')
+
     X = df.values
     # removing method idx
     X = X[:, 1:] if not include_method else X
@@ -26,7 +36,11 @@ def data_iterators(datafile, datapath,
     val_cutoff = int((train_samp + val_samp)*n_samples)
 
     Q = torch.tensor(X).type(torch.float)
-    consts_dict = get_consts_dict(Q[:train_cutoff])
+
+    if dataset == 'rate_modelling': 
+        consts_dict = get_consts_dict_modelling(Q[:train_cutoff])
+    elif dataset == 'rate_integrating':
+        consts_dict = get_consts_dict_integrating(Q[:train_cutoff])
 
     if shuffle_dataset:
         order = np.arange(n_samples)

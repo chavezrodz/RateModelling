@@ -7,7 +7,7 @@ import torch
 import os
 import itertools
 from misc.utils import load_df
-from misc.iterators import data_iterators
+from misc.iterators import get_iterators
 from misc.MLP import MLP
 import scipy.integrate as integrate
 import csv
@@ -39,16 +39,14 @@ def load_model(args):
     n_layers = args.n_layers
     method = args.method
     results_dir = args.results_dir
-    datapath = args.datapath
-    batch_size = 64
 
     pc_err = args.pc_err
-    datafile = 'method_'+str(method)+'.csv'
 
-    (_, _, _), consts_dict = data_iterators(
-        datafile=datafile,
-        datapath=datapath,
-        batch_size=batch_size
+    (_, _, _), consts_dict = get_iterators(
+        method=args.method,
+        dataset=args.proj_dir,
+        datapath=args.data_dir,
+        results_path=args.results_dir,
         )
 
     model_file = f'M_{method}_n_layers_{n_layers}_hid_dim_{h_dim}'
@@ -68,7 +66,7 @@ def load_model(args):
 
 def main(args):
     datafile = 'method_'+str(args.method)+'.csv'
-    datapath = args.datapath
+    datapath = args.data_dir
     results_dir = args.results_dir
 
     a = args.a
@@ -79,17 +77,17 @@ def main(args):
     model = load_model(args)
     df = load_df(datapath, datafile, args.which_spacing)
     p_values, T_values, t_values = get_p_Tt_combs(df)
-    results_path = os.path.join(
+    single_results_dir = os.path.join(
         results_dir,
         'integral_results_single',
         'method_'+str(args.method)
         )
-    os.makedirs(results_path, exist_ok=True)
+    os.makedirs(single_results_dir, exist_ok=True)
     fieldnames = ['M', 'P', 'T', 't', 'Integral']
 
-    for p in p_values[:1]:
+    for p in p_values:
         file_name = f'p_{p}'.replace('.', '_')+'.csv'
-        file_name = os.path.join(results_path, file_name)
+        file_name = os.path.join(single_results_dir, file_name)
         with open(file_name, 'w', encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -104,6 +102,18 @@ def main(args):
                     'Integral': result
                     }
                 writer.writerow(row)
+
+    dfs = []
+    for file in os.listdir(single_results_dir):
+        dfs.append(pd.read_csv(os.path.join(single_results_dir, file)))
+    df = pd.concat(dfs, ignore_index=True)
+    combined_dir = os.path.join(results_dir, 'integral_results')
+    os.makedirs(combined_dir, exist_ok=True)
+
+    df.to_csv(
+        os.path.join(combined_dir, 'method_'+args.method+'.csv'),
+        index=False
+        )
 
 
 if __name__ == '__main__':
@@ -122,7 +132,8 @@ if __name__ == '__main__':
     # Managing params
     parser.add_argument("--n_threads", default=8, type=int)
     parser.add_argument("--results_dir", default='Results', type=str)
-    parser.add_argument("--datapath", default='../datasets', type=str)
+    parser.add_argument("--proj_dir", default='rate_modelling', type=str)
+    parser.add_argument("--data_dir", default='../datasets', type=str)
     parser.add_argument("--which_spacing", default='both', type=str)
     args = parser.parse_args()
 
