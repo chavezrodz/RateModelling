@@ -22,4 +22,8 @@ python integrate_all.py
 
 ### 4 train second MLP using analytical rates
 
-python train.py --proj_dir rate_integratin --method method_idx
+python train.py --proj_dir rate_integrating --method method_idx
+
+### Export all models to cpp
+
+python export_all.py
