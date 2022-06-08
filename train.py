@@ -114,7 +114,7 @@ if __name__ == '__main__':
                         choices=['pc_err', 'abs_err', 'mse'])
 
     parser.add_argument("--which_spacing", default='both', type=str)
-    parser.add_argument("--proj_dir", default='rate_integrating', type=str,
+    parser.add_argument("--proj_dir", default='rate_modelling', type=str,
                         choices=['rate_modelling', 'rate_integrating'])
 
     parser.add_argument("--results_dir", default='Results', type=str)
