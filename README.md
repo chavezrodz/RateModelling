@@ -10,20 +10,21 @@ datasets-/linspaced/method_*.csv
 
 ## Steps
 
-### 1 generate datasets with schrodinger
+### 1 Generate datasets with schrodinger code
 
-### 2 train first MLP with rate data
+### 2 Train first MLP with rate data
 
 python train.py --proj_dir rate_modelling --method method_idx
 
-### 3 use first MLP to compute analytical integrals with the model
+### 3 Use first MLP to compute analytical integrals with the model
 
 python integrate_all.py
 
-### 4 train second MLP using analytical rates
+### 4 Train second MLP using analytical rates
 
 python train.py --proj_dir rate_integrating --method method_idx
 
-### Export all models to cpp
+### 5 Export all models to cpp
 
-python export_all.py
+python test_export.py --proj_dir rate_modelling --method method_idx
+python test_export.py --proj_dir rate_integrating --method method_idx
