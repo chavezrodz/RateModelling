@@ -3,27 +3,16 @@ from pytorch_lightning import utilities
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from argparse import ArgumentParser
-from misc.iterators import get_iterators
+from Datamodule import DataModule
 from misc.utils import make_file_prefix, make_checkpt_dir
 from misc.load_model import load_model
 import os
 
 
 def main(args):
-    n_workers = 8
+    args.n_workers = 8
     utilities.seed.seed_everything(seed=args.seed, workers=True)
-
-    (train_dl, val_dl, test_dl), consts_dict = get_iterators(
-        method=args.method,
-        dataset=args.proj_dir,
-        datapath=args.data_dir,
-        results_path=args.results_dir,
-        which_spacing=args.which_spacing,
-        batch_size=args.batch_size,
-        shuffle_dataset=args.shuffle_dataset,
-        num_workers=n_workers,
-        val_samp=args.val_sample
-        )
+    dm = DataModule(args)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=make_checkpt_dir(args),
@@ -34,11 +23,7 @@ def main(args):
         auto_insert_metric_name=False,
         save_last=False
         )
-
-    input_dim = 3 if args.proj_dir == 'rate_integrating' else 4
-
-    model = load_model(args, saved=False)
-
+    model = load_model(args, dm, saved=False)
     logger = TensorBoardLogger(
         save_dir=os.path.join(
             args.results_dir,
@@ -60,12 +45,8 @@ def main(args):
         deterministic=True,
         )
 
-    trainer.fit(
-        model,
-        train_dl,
-        val_dl
-        )
-    trainer.test(model, test_dl)
+    trainer.fit(model, datamodule=dm)
+    trainer.test(model, datamodule=dm)
 
 
 if __name__ == '__main__':
@@ -91,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
     parser.add_argument("--val_sample", default=0.5, type=float)
     parser.add_argument("--seed", default=0, type=int)
-    parser.add_argument("--fast_dev_run", default=False, type=bool)
+    parser.add_argument("--fast_dev_run", default=True, type=bool)
     args = parser.parse_args()
 
     main(args)
