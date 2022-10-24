@@ -7,8 +7,8 @@ import os
 import itertools
 from misc.utils import load_df
 from misc.load_model import load_model
-from misc.iterators import get_iterators
 import scipy.integrate as integrate
+from Datamodule import DataModule
 import csv
 
 
@@ -41,9 +41,10 @@ def main(args):
     a = args.a
     b = args.b
     N = args.N
-    n_threads = args.n_threads
 
-    model = load_model(args, saved=True)
+    dm = DataModule(args)
+    model = load_model(args, dm.consts_dict, saved=True)
+
     df = load_df(datapath, datafile, args.which_spacing)
     p_values, T_values, t_values = get_p_Tt_combs(df)
     single_results_dir = os.path.join(
@@ -54,44 +55,50 @@ def main(args):
     os.makedirs(single_results_dir, exist_ok=True)
     fieldnames = ['M', 'P', 'T', 't', 'Integral']
 
-    for p in p_values:
-        file_name = f'p_{p}'.replace('.', '_')+'.csv'
-        file_name = os.path.join(single_results_dir, file_name)
-        with open(file_name, 'w', encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for (T, t) in itertools.product(T_values, t_values):
-                print(f"Running p:{p} T:{T} t:{t}")
-                result = k_integral(p, T, t, model, a, b, N=N)
-                row = {
-                    'M': int(args.method),
-                    'P': p,
-                    'T': T,
-                    't': t,
-                    'Integral': result
-                    }
-                writer.writerow(row)
+    if args.compute:
+        for p in p_values:
+            file_name = f'p_{p}'.replace('.', '_')+'.csv'
+            file_name = os.path.join(single_results_dir, file_name)
+            with open(file_name, 'w', encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                for (T, t) in itertools.product(T_values, t_values):
+                    print(f"Running p:{p} T:{T} t:{t}")
+                    result = k_integral(p, T, t, model, a, b, N=N)
+                    row = {
+                        'M': int(args.method),
+                        'P': p,
+                        'T': T,
+                        't': t,
+                        'Integral': result
+                        }
+                    writer.writerow(row)
 
-    dfs = []
-    for file in os.listdir(single_results_dir):
-        dfs.append(pd.read_csv(os.path.join(single_results_dir, file)))
-    df = pd.concat(dfs, ignore_index=True)
-    combined_dir = os.path.join(results_dir, 'integral_results')
-    os.makedirs(combined_dir, exist_ok=True)
+    if args.combine:
+        dfs = []
+        for file in os.listdir(single_results_dir):
+            dfs.append(pd.read_csv(os.path.join(single_results_dir, file)))
+        df = pd.concat(dfs, ignore_index=True)
+        combined_dir = os.path.join(results_dir, 'integral_results')
+        os.makedirs(combined_dir, exist_ok=True)
 
-    df.to_csv(
-        os.path.join(combined_dir, 'method_'+args.method+'.csv'),
-        index=False
-        )
+        df.to_csv(
+            os.path.join(combined_dir, 'method_'+str(args.method)+'.csv'),
+            index=False
+            )
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+
     # Model Params
-    parser.add_argument("--method", default=1, type=int)
+    parser.add_argument("--method", default=2, type=int)
     parser.add_argument("--hidden_dim", default=64, type=int)
     parser.add_argument("--n_layers", default=8, type=int)
     parser.add_argument("--pc_err", default='2.50e-02', type=str)
+
+    parser.add_argument("--compute", default=True, type=bool)
+    parser.add_argument("--combine", default=False, type=bool)
 
     # Integral Params
     parser.add_argument("--a", default=0.01, type=float)

@@ -9,22 +9,33 @@ import pytorch_lightning as pl
 
 
 class DataModule(pl.LightningDataModule):
-    def __init__(self, args):
+    def __init__(self,
+                 args,
+                 batch_size=1024,
+                 shuffle_dataset=True,
+                 num_workers=8,
+                 val_samp=0.1,
+                 test_samp=0.1,
+                 include_method=False
+                 ):
+
         super().__init__()
         self.method = args.method
         self.dataset = args.proj_dir
         self.datapath = args.data_dir
         self.results_path = args.results_dir
         self.which_spacing = args.which_spacing
-        self.batch_size = args.batch_size
-        self.shuffle_dataset = args.shuffle_dataset
-        self.num_workers = args.n_workers
-        self.val_samp = args.val_sample
-        self.test_samp = 0.1
-        self.include_method = False
+
+        self.batch_size = batch_size
+        self.shuffle_dataset = shuffle_dataset
+        self.num_workers = num_workers
+        self.val_samp = val_samp
+        self.test_samp = test_samp
+        self.include_method = include_method
+
+        self.input_dim = 3 if args.proj_dir == 'rate_integrating' else 4
 
         datafile = 'method_'+str(self.method)+'.csv'
-        print(self.dataset)
         if self.dataset == 'rate_modelling':
             df = load_df(self.datapath, datafile, self.which_spacing)
         elif self.dataset == 'rate_integrating':

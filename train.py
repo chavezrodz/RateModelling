@@ -10,9 +10,7 @@ import os
 
 
 def main(args):
-    args.n_workers = 8
     utilities.seed.seed_everything(seed=args.seed, workers=True)
-    dm = DataModule(args)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=make_checkpt_dir(args),
@@ -23,7 +21,17 @@ def main(args):
         auto_insert_metric_name=False,
         save_last=False
         )
+
+    dm = DataModule(
+        args,
+        batch_size=args.batch_size,
+        shuffle_dataset=args.shuffle_dataset,
+        num_workers=8,
+        val_samp=args.val_samp,
+        )
+
     model = load_model(args, dm, saved=False)
+
     logger = TensorBoardLogger(
         save_dir=os.path.join(
             args.results_dir,
@@ -70,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument("--results_dir", default='Results', type=str)
     parser.add_argument("--data_dir", default='../datasets', type=str)
     parser.add_argument("--shuffle_dataset", default=True, type=bool)
-    parser.add_argument("--val_sample", default=0.5, type=float)
+    parser.add_argument("--val_samp", default=0.5, type=float)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--fast_dev_run", default=True, type=bool)
     args = parser.parse_args()

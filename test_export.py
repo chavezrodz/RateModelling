@@ -1,3 +1,4 @@
+from pytorch_lightning import Trainer
 from argparse import ArgumentParser
 import numpy as np
 import pandas as pd
@@ -5,13 +6,10 @@ import torch
 import os
 import matplotlib.pyplot as plt
 from misc.utils import load_df
-from misc.iterators import get_iterators
 import scipy.integrate as integrate
 from misc.utils import generate_test_data, get_closest_values, load_df
-from misc.iterators import get_iterators
-from misc.MLP import MLP
-from misc.Wrapper import Wrapper
-from misc.norms import normalize_vector_integrating, normalize_vector_modelling
+from misc.load_model import load_model
+from Datamodule import DataModule
 
 
 def compare_with_data(P, K, T, datapath, dataset, model, include_data):
@@ -135,62 +133,17 @@ def k_integral(P, T, t, datapath, dataset, model, a, b, N=50, which='both'):
     return
 
 
-def load_model(args, consts_dict):
-    h_dim = args.hidden_dim
-    n_layers = args.n_layers
-    method = args.method
-    results_dir = args.results_dir
-    proj_dir = args.proj_dir
-    pc_err = args.pc_err
-
-    model_file = f'M_{method}_n_layers_{n_layers}_hid_dim_{h_dim}'
-    model_file += f'_val_pc_err={pc_err}.ckpt'
-    model_path = os.path.join(
-        results_dir, proj_dir, "saved_models",
-        f'Method_{method}', model_file
-        )
-
-    input_dim = 3 if args.proj_dir == 'rate_integrating' else 4
-    core_model = MLP(
-        input_dim=input_dim,
-        hidden_dim=args.hidden_dim,
-        n_layers=args.n_layers,
-        output_dim=1
-        )
-
-    if args.proj_dir == 'rate_modelling':
-        normalize_func = normalize_vector_modelling
-    else:
-        normalize_func = normalize_vector_integrating
-
-    model = Wrapper.load_from_checkpoint(
-        core_model=core_model,
-        checkpoint_path=model_path,
-        hidden_dim=h_dim,
-        n_layers=n_layers,
-        consts_dict=consts_dict,
-        normalize_func=normalize_func
-        )
-    return model
-
-
 def main(args):
     datafile = 'method_'+str(args.method)+'.csv'
     datapath = args.data_dir
     results_dir = args.results_dir
 
-    (_, _, test), consts_dict = get_iterators(
-        method=args.method,
-        dataset=args.proj_dir,
-        datapath=args.data_dir,
-        results_path=args.results_dir,
-        )
-
-    model = load_model(args, consts_dict)
+    dm = DataModule(args, batch_size=8)
+    model = load_model(args, dm, saved=True)
 
     df = load_df(datapath, datafile, args.which_spacing)
 
-    if args.include_test:
+    if args.test:
         if args.proj_dir == "rate_modelling":
             P = args.P
             K = args.K
@@ -211,44 +164,44 @@ def main(args):
         elif args.proj_dir == "rate_integrating":
             pass
 
-    for batch in test:
-        x = batch[0]
-        input_example = x[:4]
-        break
-    # print(input_example)
-    # print(model(input_example))
+    if args.export:
+        dm.setup(stage='test')
+        for batch in dm.test_dataloader():
+            x = batch[0]
+            input_example = x[:4]
+            break
+            # print(input_example)
+            # print(model(input_example))
 
-    compiled_path = os.path.join(
-        results_dir,
-        "compiled_models",
-        args.proj_dir,
-        )
-    os.makedirs(compiled_path, exist_ok=True)
-    compiled_path = os.path.join(
-        compiled_path,
-        f'Method_{args.method}.pt'
-        )
+        compiled_dir = os.path.join(
+            results_dir,
+            "compiled_models",
+            args.proj_dir,
+            )
+        os.makedirs(compiled_dir, exist_ok=True)
 
-    model.to_torchscript(
-        file_path=compiled_path,
-        example_inputs=input_example
-        )
+        model.to_torchscript(
+            file_path=os.path.join(compiled_dir, f'Method_{args.method}.pt'),
+            example_inputs=input_example
+            )
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     # Managing params
-    parser.add_argument("--include_test", default=False, type=bool)
+    parser.add_argument("--test", default=False, type=bool)
+    parser.add_argument("--export", default=True, type=bool)
+
     parser.add_argument("--results_dir", default='Results', type=str)
-    parser.add_argument("--proj_dir", default='rate_modelling', type=str)
+    parser.add_argument("--proj_dir", default='rate_integrating', type=str)
     parser.add_argument("--data_dir", default='../datasets', type=str)
     parser.add_argument("--which_spacing", default='both', type=str)
 
     # Model Params
-    parser.add_argument("--method", default=0, type=int)
+    parser.add_argument("--method", default=3, type=int)
     parser.add_argument("--hidden_dim", default=64, type=int)
     parser.add_argument("--n_layers", default=8, type=int)
-    parser.add_argument("--pc_err", default='4.64e-02', type=str)
+    parser.add_argument("--pc_err", default='4.90e-02', type=str)
 
     # Rate Modelling
     parser.add_argument("--t", default=1.05, type=float)
@@ -258,8 +211,8 @@ if __name__ == '__main__':
 
     # Rate Modelling & Integrating
     parser.add_argument("--include_data", default=True, type=bool)
-    parser.add_argument("--P", default=1000, type=float)
-    parser.add_argument("--K", default=0.99, type=float)
+    parser.add_argument("--P", default=100, type=float)
+    parser.add_argument("--K", default=0.09, type=float)
     parser.add_argument("--T", default=0.26, type=float)
 
     # Rate Integrating
