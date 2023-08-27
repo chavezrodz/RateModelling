@@ -3,14 +3,18 @@ import torch
 import pandas as pd
 import torch.utils.data as data
 import numpy as np
-from misc.utils import load_df
+from misc.load_df import load_df
 from misc.norms import get_consts_dict_modelling, get_consts_dict_integrating
 import pytorch_lightning as pl
 
 
 class DataModule(pl.LightningDataModule):
     def __init__(self,
-                 args,
+                 method,
+                 proj_dir,
+                 data_dir,
+                 results_dir,
+                 which_spacing,
                  batch_size=1024,
                  shuffle_dataset=True,
                  num_workers=8,
@@ -20,11 +24,11 @@ class DataModule(pl.LightningDataModule):
                  ):
 
         super().__init__()
-        self.method = args.method
-        self.dataset = args.proj_dir
-        self.datapath = args.data_dir
-        self.results_path = args.results_dir
-        self.which_spacing = args.which_spacing
+        self.method = method
+        self.proj_dir = proj_dir
+        self.datapath = data_dir
+        self.results_path = results_dir
+        self.which_spacing = which_spacing
 
         self.batch_size = batch_size
         self.shuffle_dataset = shuffle_dataset
@@ -33,14 +37,14 @@ class DataModule(pl.LightningDataModule):
         self.test_samp = test_samp
         self.include_method = include_method
 
-        self.input_dim = 3 if args.proj_dir == 'rate_integrating' else 4
+        self.input_dim = 3 if proj_dir == 'rate_integrating' else 4
 
-        datafile = 'method_'+str(self.method)+'.csv'
-        if self.dataset == 'rate_modelling':
-            df = load_df(self.datapath, datafile, self.which_spacing)
-        elif self.dataset == 'rate_integrating':
+        if self.proj_dir == 'rate_modelling':
+            df = load_df(self.datapath, method, self.which_spacing)
+        elif self.proj_dir == 'rate_integrating':
             df = pd.read_csv(
-                os.path.join(self.results_path, 'integral_results', datafile)
+                os.path.join(self.results_path, 'integral_results',
+                             'method_'+str(method)+'.csv')
                 )
             df.drop_duplicates()
         else:
@@ -57,25 +61,25 @@ class DataModule(pl.LightningDataModule):
 
         Q = torch.tensor(X).type(torch.float)
 
-        if self.dataset == 'rate_modelling':
+        if self.proj_dir == 'rate_modelling':
             self.consts_dict = get_consts_dict_modelling(Q[:train_cutoff])
-        elif self.dataset == 'rate_integrating':
+        elif self.proj_dir == 'rate_integrating':
             self.consts_dict = get_consts_dict_integrating(Q[:train_cutoff])
 
     def prepare_data(self):
         pass
 
     def setup(self, stage=None):
-        datafile = 'method_'+str(self.method)+'.csv'
-        if self.dataset == 'rate_modelling':
-            df = load_df(self.datapath, datafile, self.which_spacing)
-        elif self.dataset == 'rate_integrating':
-            df = pd.read_csv(
-                os.path.join(self.results_path, 'integral_results', datafile)
-                )
-            df.drop_duplicates()
-        else:
-            raise Exception('Dataset not found')
+        match self.proj_dir:
+            case 'rate_modelling':
+                df = load_df(self.datapath, self.method, self.which_spacing)
+            case 'rate_integrating':
+                datafile = 'method_'+str(self.method)+'.csv'
+                df = pd.read_csv(
+                    os.path.join(self.results_path, 'integral_results',
+                                 datafile)
+                                )
+                df.drop_duplicates()
 
         X = df.values
         # removing method idx
@@ -89,9 +93,9 @@ class DataModule(pl.LightningDataModule):
 
         Q = torch.tensor(X).type(torch.float)
 
-        if self.dataset == 'rate_modelling':
+        if self.proj_dir == 'rate_modelling':
             self.consts_dict = get_consts_dict_modelling(Q[:train_cutoff])
-        elif self.dataset == 'rate_integrating':
+        elif self.proj_dir == 'rate_integrating':
             self.consts_dict = get_consts_dict_integrating(Q[:train_cutoff])
 
         if self.shuffle_dataset:

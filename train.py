@@ -1,16 +1,18 @@
 from pytorch_lightning import Trainer
-from pytorch_lightning import utilities
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from argparse import ArgumentParser
-from Datamodule import DataModule
+from misc.Datamodule import DataModule
 from misc.utils import make_file_prefix, make_checkpt_dir
 from misc.load_model import load_model
+from torch import manual_seed
+import numpy as np
 import os
 
 
 def main(args):
-    utilities.seed.seed_everything(seed=args.seed, workers=True)
+    manual_seed(seed=args.seed)
+    np.random.seed(args.seed)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=make_checkpt_dir(args),
@@ -23,14 +25,28 @@ def main(args):
         )
 
     dm = DataModule(
-        args,
+        args.method,
+        args.proj_dir,
+        args.data_dir,
+        args.results_dir,
+        args.which_spacing,
         batch_size=args.batch_size,
         shuffle_dataset=args.shuffle_dataset,
         num_workers=8,
         val_samp=args.val_samp,
         )
 
-    model = load_model(args, dm, saved=False)
+    model = load_model(args.method,
+                       args.hidden_dim,
+                       args.n_layers,
+                       args.proj_dir,
+                       dm,
+                       saved=False,
+                       results_dir=args.results_dir,
+                       amsgrad=args.amsgrad,
+                       criterion=args.criterion,
+                       lr=args.lr
+                       )
 
     logger = TensorBoardLogger(
         save_dir=os.path.join(
@@ -48,7 +64,6 @@ def main(args):
         devices='auto',
         max_epochs=args.epochs,
         callbacks=[checkpoint_callback],
-        auto_lr_find=args.auto_lr_find,
         fast_dev_run=args.fast_dev_run,
         deterministic=True,
         )
@@ -67,7 +82,6 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", default=100, type=int)
     parser.add_argument("--lr", default=1e-3, type=float)
     parser.add_argument("--amsgrad", default=True, type=bool)
-    parser.add_argument("--auto_lr_find", default=True, type=bool)
     parser.add_argument("--criterion", default='pc_err', type=str,
                         choices=['pc_err', 'abs_err', 'mse'])
 

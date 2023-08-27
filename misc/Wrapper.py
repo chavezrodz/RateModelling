@@ -1,7 +1,11 @@
 import torch.optim
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from pytorch_forecasting.metrics import MAPE
+# /from pytorch_forecasting.metrics import MAPE
+
+
+def MAPE(y_pred, y):
+    return ((y - y_pred)/y).abs().mean()
 
 
 class Wrapper(LightningModule):
@@ -17,7 +21,7 @@ class Wrapper(LightningModule):
         super().__init__()
         self.core_model = core_model
         self.consts_dict = consts_dict
-        self.pc_err = MAPE()
+        self.pc_err = MAPE
         self.abs_err = nn.L1Loss()
         self.mse = nn.MSELoss()
 
