@@ -1,7 +1,4 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-import torch
 import os
 
 
@@ -12,21 +9,16 @@ def closest_value(df, col, val):
 
 
 def get_closest_values(df, P, K, T):
+    """
+    K enters in units of P
+    out as real K
+    """
     p_closest = closest_value(df, 'P', P)
     T_closest = closest_value(df, 'T', T)
     subset = df[(df['P'] == p_closest) & (df['T'] == T_closest)]
-    k_closest = closest_value(subset, 'K', K)
+    k_closest = closest_value(subset, 'K', K*p_closest)
     subset = subset.loc[df['K'] == k_closest]
-    return subset
-
-
-def generate_test_data(P, K, T, N=50):
-    out = torch.zeros(N, 4)
-    out[:, 0] = P
-    out[:, 1] = K
-    out[:, 2] = T
-    out[:, 3] = torch.linspace(0, 20, N)
-    return out
+    return subset['P'].iloc[0], subset['K'].iloc[0], subset['T'].iloc[0]
 
 
 def make_file_prefix(args):

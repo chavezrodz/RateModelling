@@ -20,7 +20,8 @@ class DataModule(pl.LightningDataModule):
                  num_workers=8,
                  val_samp=0.1,
                  test_samp=0.1,
-                 include_method=False
+                 include_method=False,
+                 verbose=False
                  ):
 
         super().__init__()
@@ -36,19 +37,19 @@ class DataModule(pl.LightningDataModule):
         self.val_samp = val_samp
         self.test_samp = test_samp
         self.include_method = include_method
+        self.verbose = verbose
 
         self.input_dim = 3 if proj_dir == 'rate_integrating' else 4
 
-        if self.proj_dir == 'rate_modelling':
-            df = load_df(self.datapath, method, self.which_spacing)
-        elif self.proj_dir == 'rate_integrating':
-            df = pd.read_csv(
-                os.path.join(self.results_path, 'integral_results',
-                             'method_'+str(method)+'.csv')
-                )
-            df.drop_duplicates()
-        else:
-            raise Exception('Dataset not found')
+        match self.proj_dir: 
+            case 'rate_modelling':
+                df = load_df(data_dir, method, which_spacing, verbose=verbose)
+            case 'rate_integrating':
+                df = pd.read_csv(
+                    os.path.join(self.results_path, 'integral_results',
+                                'method_'+str(method)+'.csv')
+                    )
+                df.drop_duplicates()
 
         X = df.values
         # removing method idx
@@ -57,14 +58,15 @@ class DataModule(pl.LightningDataModule):
         # Test splitting for no data leakage in constants
         n_samples = len(X)
         train_samp = 1 - self.test_samp - self.val_samp
-        train_cutoff = int(train_samp*n_samples)
+        tr_cutoff = int(train_samp*n_samples)
 
         Q = torch.tensor(X).type(torch.float)
 
-        if self.proj_dir == 'rate_modelling':
-            self.consts_dict = get_consts_dict_modelling(Q[:train_cutoff])
-        elif self.proj_dir == 'rate_integrating':
-            self.consts_dict = get_consts_dict_integrating(Q[:train_cutoff])
+        match self.proj_dir:
+            case 'rate_modelling':
+                self.consts_dict = get_consts_dict_modelling(Q[:tr_cutoff])
+            case 'rate_integrating':
+                self.consts_dict = get_consts_dict_integrating(Q[:tr_cutoff])
 
     def prepare_data(self):
         pass
