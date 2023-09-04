@@ -7,7 +7,8 @@ import os
 
 
 def load_model(method, h_dim, n_layers, proj_dir, dm, saved,
-               results_dir=None, amsgrad=None, criterion=None, lr=None
+               results_dir=None, amsgrad=None, criterion=None, lr=None,
+               spacing=None
                ):
 
     core_model = MLP(
@@ -25,7 +26,7 @@ def load_model(method, h_dim, n_layers, proj_dir, dm, saved,
     if saved:
         model_file = f'M_{method}_n_layers_{n_layers}_hid_dim_{h_dim}_val_pc_'
         model_file = os.path.join(
-            results_dir, proj_dir, "saved_models",
+            results_dir, proj_dir, "saved_models", spacing,
             f'Method_{method}', model_file
             )
         matching_models = glob.glob(model_file+'*')

@@ -34,6 +34,7 @@ def make_checkpt_dir(args):
         args.results_dir,
         args.proj_dir,
         "saved_models",
+        args.which_spacing,
         'Method_'+str(args.method)
         )
     return dir

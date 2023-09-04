@@ -1,7 +1,6 @@
 import torch.optim
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-# /from pytorch_forecasting.metrics import MAPE
 
 
 def MAPE(y_pred, y):
@@ -16,19 +15,19 @@ class Wrapper(LightningModule):
         normalize_func,
         lr=1e-3,
         amsgrad=True,
-        criterion='abs_err'
+        criterion='pc_err'
     ):
         super().__init__()
         self.core_model = core_model
         self.consts_dict = consts_dict
+
         self.pc_err = MAPE
-        self.abs_err = nn.L1Loss()
         self.mse = nn.MSELoss()
+        self.abs_err = nn.L1Loss()
 
         self.criterion = criterion
-        self.lr = lr
+        self.learning_rate = lr
         self.amsgrad = amsgrad
-
         self.normalize_func = normalize_func
 
     def forward(self, x):
@@ -40,11 +39,13 @@ class Wrapper(LightningModule):
         return self(x), y
 
     def get_metrics(self, pred, y):
+        # Always learning the exponents
         metrics = dict(
-            abs_err=self.abs_err(pred, y),
             pc_err=self.pc_err(pred, y),
-            mse=self.mse(pred, y),
-        )
+            log_mse=self.mse(torch.log1p(pred), torch.log1p(y)),
+            log_pc_err=self.pc_err(torch.log1p(pred), torch.log1p(y)),
+            log_abs_err=self.abs_err(torch.log1p(pred), torch.log1p(y)),
+            )
         return metrics
 
     def training_step(self, batch, batch_idx):
@@ -75,7 +76,7 @@ class Wrapper(LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
             self.parameters(),
-            lr=self.lr,
+            lr=self.learning_rate,
             amsgrad=self.amsgrad
             )
         return optimizer
