@@ -35,7 +35,8 @@ def preprocess(datapath, method, spacing):
     ts = np.sort(df['t'].unique())
     t_mid_idx = np.argmin(np.abs(ts - mid_pt))
     t_mid = ts[t_mid_idx]
-    df_mid = df[df['t'] == t_mid].sort_values(by=['P', 'K', 'T'], ascending=True)
+    df_mid = df[df['t'] == t_mid].sort_values(
+        by=['P', 'K', 'T'], ascending=True)
 
     df_mid = df_mid.drop(['t'], axis=1)
     df_mid['pc_err'] = np.zeros(len(df_mid))
@@ -49,14 +50,16 @@ def preprocess(datapath, method, spacing):
             by='t', ascending=True)
         gammas = subset['gamma'].values
         pc_diff = ((gammas[1:] - gammas[:-1])/gammas[1:])*100
-        pc_diff = np.where(np.abs(pc_diff)>0.5, pc_diff, 0)
+        pc_diff = np.where(np.abs(pc_diff) > 0.5, pc_diff, 0)
 
         end_change = np.sign(pc_diff[t_mid_idx:])
         end_change = np.where(end_change < 0, end_change, 0)
         end_change = np.sum(end_change)
         # end_change = np.sum(np.sign(pc_diff)[t_mid_idx:])
         total_change = np.abs(np.diff(np.sign(pc_diff))).sum()
-        df_mid.loc[index, 'pc_err'] = np.abs((gam - subset['gamma'].values)/gam).max()*100
+        df_mid.loc[index, 'pc_err'] = np.abs(
+            (gam - subset['gamma'].values)/gam
+            ).max()*100
         df_mid.loc[index, 'tot_change'] = total_change
         df_mid.loc[index, 'end_change'] = end_change
 
@@ -205,6 +208,7 @@ def load_df(datapath, proj_dir, method, spacing='logspaced'):
                 datapath, proj_dir, 'processed', spacing, datafile)
         case 'rate_integrating':
             df_file = os.path.join(
-                'Results', 'integral_results', datafile)
+                'Results', 'rate_integrating',
+                'int_results', 'combined', datafile)
     df = pd.read_csv(df_file)
     return df.drop_duplicates()
