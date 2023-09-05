@@ -20,6 +20,7 @@ def get_mean_norm(x, log=True):
 
 def get_consts_dict_modelling(x):
     t_mn = get_mean_norm(torch.unique(x[:, -2]))
+    # t_mn = get_mean_norm(torch.unique(x[:, -2]), log=False)
     T_mn = get_mean_norm(torch.unique(x[:, -3]), log=False)
     p_mn = get_mean_norm(torch.unique(x[:, -5]))
 
@@ -46,7 +47,7 @@ def normalize_vector_modelling(x, consts):
     """
     Proceed in reverse order: t, T, K, P
     """
-
+    # x[:, -1] = (x[:, -1] - consts[-1, 0])/consts[-1, 1]
     x[:, -1] = log_to_lin(x[:, -1], consts[-1, 0], consts[-1, 1])
     x[:, -2] = (x[:, -2] - consts[-2, 0])/consts[-2, 1]
     x[:, -3] = x[:, -3]/x[:, -4]

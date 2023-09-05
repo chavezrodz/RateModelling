@@ -39,11 +39,20 @@ class DataModule(pl.LightningDataModule):
         self.include_method = include_method
         self.seed = seed
 
-        self.input_dim = 3 if proj_dir == 'rate_integrating' else 4
-
         df = load_df(datapath, proj_dir, method, which_spacing)
+
+        match self.proj_dir:
+            case 'rate_modelling':
+                self.input_dim = 4
+                self.inner_cols = ['M', 'P', 'K', 'T']
+                self.outer_cols = ['t', 'gamma']
+            case 'rate_integrating':
+                self.input_dim = 3
+                self.inner_cols = ['M', 'P', 'T']
+                self.outer_cols = ['t', 'Integral']
+
         t = np.sort(df['t'].unique())[-1]
-        df_pkT = df[df['t'] == t].copy().drop(['t', 'gamma'], axis=1)
+        df_pkT = df[df['t'] == t].copy().drop(self.outer_cols, axis=1)
         df_pkT = df_pkT.sample(frac=1, random_state=0)
         # Test splitting for no data leakage in constants
         n_samples = len(df_pkT)
@@ -51,7 +60,7 @@ class DataModule(pl.LightningDataModule):
         tr_cutoff = int(train_samp*n_samples)
 
         train_pkT = df_pkT.iloc[:tr_cutoff]
-        train_full = train_pkT.merge(df, how='inner', on=['M', 'P', 'K', 'T'])
+        train_full = train_pkT.merge(df, how='inner', on=self.inner_cols)
 
         Q = torch.tensor(train_full.values).type(torch.float)
 
@@ -67,8 +76,9 @@ class DataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         df = load_df(
             self.datapath, self.proj_dir, self.method, self.which_spacing)
+
         t = np.sort(df['t'].unique())[-1]
-        df_pkT = df[df['t'] == t].copy().drop(['t', 'gamma'], axis=1)
+        df_pkT = df[df['t'] == t].copy().drop(self.outer_cols, axis=1)
         df_pkT = df_pkT.sample(frac=1, random_state=0)
 
         # Test splitting for no data leakage in constants
@@ -81,10 +91,11 @@ class DataModule(pl.LightningDataModule):
         val_pkT = df_pkT.iloc[tr_cutoff:val_cutoff].copy()
         test_pkT = df_pkT.iloc[val_cutoff:].copy()
 
-        train_full = train_pkT.merge(df, how='inner', on=['M', 'P', 'K', 'T'])
+        train_full = train_pkT.merge(df, how='inner', on=self.inner_cols)
         train_full = train_full.sample(frac=1, random_state=self.seed)
-        val_full = val_pkT.merge(df, how='inner', on=['M', 'P', 'K', 'T'])
-        test_full = test_pkT.merge(df, how='inner', on=['M', 'P', 'K', 'T'])
+        val_full = val_pkT.merge(df, how='inner', on=self.inner_cols)
+        test_full = test_pkT.merge(df, how='inner', on=self.inner_cols)
+
         if not self.include_method:
             train_full = train_full.drop('M', axis=1)
             val_full = val_full.drop('M', axis=1)
