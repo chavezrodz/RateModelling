@@ -4,7 +4,7 @@ from pytorch_lightning import LightningModule
 
 
 def MAPE(y_pred, y):
-    return ((y - y_pred)/y).abs().mean()
+    return ((y - y_pred) / y).abs().mean()
 
 
 class Wrapper(LightningModule):
@@ -15,7 +15,7 @@ class Wrapper(LightningModule):
         normalize_func,
         lr=1e-3,
         amsgrad=True,
-        criterion='pc_err'
+        criterion="pc_err",
     ):
         super().__init__()
         self.core_model = core_model
@@ -45,38 +45,29 @@ class Wrapper(LightningModule):
             log_mse=self.mse(torch.log1p(pred), torch.log1p(y)),
             log_pc_err=self.pc_err(torch.log1p(pred), torch.log1p(y)),
             log_abs_err=self.abs_err(torch.log1p(pred), torch.log1p(y)),
-            )
+        )
         return metrics
 
     def training_step(self, batch, batch_idx):
         pred, y = self.predict_step(batch, batch_idx)
         metrics = self.get_metrics(pred, y)
         self.log_dict(
-            {f'{k}/train': v for k, v in metrics.items()},
-            on_epoch=True, on_step=False
-            )
+            {f"{k}/train": v for k, v in metrics.items()}, on_epoch=True, on_step=False
+        )
         return metrics[self.criterion]
 
     def validation_step(self, batch, batch_idx):
         pred, y = self.predict_step(batch, batch_idx)
         metrics = self.get_metrics(pred, y)
-        self.log_dict(
-            {f'{k}/validation': v for k, v in metrics.items()},
-            on_epoch=True
-        )
+        self.log_dict({f"{k}/validation": v for k, v in metrics.items()}, on_epoch=True)
 
     def test_step(self, batch, batch_idx):
         pred, y = self.predict_step(batch, batch_idx)
         metrics = self.get_metrics(pred, y)
-        self.log_dict(
-            {f'{k}': v for k, v in metrics.items()},
-            on_epoch=True
-        )
+        self.log_dict({f"{k}": v for k, v in metrics.items()}, on_epoch=True)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
-            self.parameters(),
-            lr=self.learning_rate,
-            amsgrad=self.amsgrad
-            )
+            self.parameters(), lr=self.learning_rate, amsgrad=self.amsgrad
+        )
         return optimizer

@@ -3,19 +3,19 @@ import torch
 
 
 def log_to_lin(x, x_mean, norm):
-    x = (torch.log10(x) - x_mean)/norm
+    x = (torch.log10(x) - x_mean) / norm
     return x
 
 
 def lin_to_log(x, x_mean, norm):
-    x = x*norm + x_mean
+    x = x * norm + x_mean
     return 10**x
 
 
 def get_mean_norm(x, log=True):
     if log:
         x = np.log10(x)
-    return x.mean(), (x.max() - x.min())/2
+    return x.mean(), (x.max() - x.min()) / 2
 
 
 def get_consts_dict_modelling(x):
@@ -49,8 +49,8 @@ def normalize_vector_modelling(x, consts):
     """
     # x[:, -1] = (x[:, -1] - consts[-1, 0])/consts[-1, 1]
     x[:, -1] = log_to_lin(x[:, -1], consts[-1, 0], consts[-1, 1])
-    x[:, -2] = (x[:, -2] - consts[-2, 0])/consts[-2, 1]
-    x[:, -3] = x[:, -3]/x[:, -4]
+    x[:, -2] = (x[:, -2] - consts[-2, 0]) / consts[-2, 1]
+    x[:, -3] = x[:, -3] / x[:, -4]
     x[:, -4] = log_to_lin(x[:, -4], consts[-3, 0], consts[-3, 1])
     return x
 
@@ -61,6 +61,6 @@ def normalize_vector_integrating(x, consts):
     """
 
     x[:, -1] = log_to_lin(x[:, -1], consts[-1, 0], consts[-1, 1])
-    x[:, -2] = (x[:, -2] - consts[-2, 0])/consts[-2, 1]
+    x[:, -2] = (x[:, -2] - consts[-2, 0]) / consts[-2, 1]
     x[:, -3] = log_to_lin(x[:, -3], consts[-3, 0], consts[-3, 1])
     return x
