@@ -32,7 +32,7 @@ class Wrapper(LightningModule):
 
     def forward(self, x):
         x = self.normalize_func(x, self.consts_dict)
-        return self.core_model(x)
+        return self.core_model(x).square()
 
     def predict_step(self, batch, batch_idx):
         x, y = batch

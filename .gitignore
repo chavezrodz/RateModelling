@@ -7,6 +7,8 @@ wandb
 TB_logs
 saved_models
 model.pt
+Plots
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

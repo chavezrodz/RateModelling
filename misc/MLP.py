@@ -25,6 +25,6 @@ class MLP(nn.Module):
             self.mlp.append(nn.Linear(hidden_dim, hidden_dim))
             self.mlp.append(nn.ReLU())
         self.mlp.append(nn.Linear(hidden_dim, output_dim))
-        
+
     def forward(self, x):
-        return self.mlp(x).square()
+        return self.mlp(x)

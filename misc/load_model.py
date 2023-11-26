@@ -36,12 +36,10 @@ def load_model(method, h_dim, n_layers, proj_dir, dm, saved,
             ]
         idx = np.argmin(tmp_models)
         print(f"""
-    Loading {proj_dir} Model {method} with {tmp_models[idx]*100:3}% error
+    Loading {proj_dir} Model {method} with {tmp_models[idx]:%}% error
         """)
-        model_file = matching_models[idx]
-
         model = Wrapper.load_from_checkpoint(
-            checkpoint_path=model_file,
+            checkpoint_path=matching_models[idx],
             core_model=core_model,
             consts_dict=dm.consts_dict,
             normalize_func=normalize_func,
