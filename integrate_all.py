@@ -43,7 +43,7 @@ def func(args):
     with open(file_name, "w", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["P", "T", "t", "Integral"])
         writer.writeheader()
-        for (T, t) in itertools.product(T_values, t_values):
+        for T, t in itertools.product(T_values, t_values):
             result = k_integral(p, T, t, model, a, b, N=N)
             row = {"P": p, "T": T, "t": t, "Integral": result}
             writer.writerow(row)
